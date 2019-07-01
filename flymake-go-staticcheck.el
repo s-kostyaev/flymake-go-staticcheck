@@ -111,11 +111,15 @@ Run go-staticcheck against SOURCE-BUFFER and use FLYMAKE-REPORT-FN to report res
   (flymake-go-staticcheck--create-process
    source-buffer
    (lambda (go-staticcheck-stdout)
-     (funcall flymake-report-fn (flymake-go-staticcheck--report go-staticcheck-stdout source-buffer))))
-  (with-current-buffer source-buffer
-    ;; (process-send-string flymake-go-staticcheck--process (buffer-string))
-    ;; (process-send-eof flymake-go-staticcheck--process)
-    ))
+     (funcall flymake-report-fn (flymake-go-staticcheck--report go-staticcheck-stdout source-buffer)
+              ;; If the buffer hasn't changed since last
+              ;; call to the report function, flymake won't
+              ;; delete old diagnostics.  Using :region
+              ;; keyword forces flymake to delete
+              ;; them (github#159).
+              ;;
+              ;; thanks to eglot for workaround.
+              :region (with-current-buffer source-buffer (cons (point-min) (point-max)))))))
 
 (defun flymake-go-staticcheck--checker (flymake-report-fn &rest ignored)
   "Internal function.
