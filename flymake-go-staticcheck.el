@@ -17,7 +17,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; URL: https://github.com/s-kostyaev/flymake-go-staticcheck
 
@@ -59,24 +59,24 @@ Throw an error and tell REPORT-FN to disable itself if `flymake-go-staticcheck-e
     (error (message "can't find '%s' in exec-path - try M-x set-variable flymake-go-staticcheck-executable maybe?"
                     flymake-go-staticcheck-executable))))
 
-(defun flymake-go-staticcheck--report (staticcheck-stdout-buffer source-buffer)
-  "Create Flymake diag messages from contents of STATICCHECK-STDOUT-BUFFER, to be reported against SOURCE-BUFFER.
+(defun flymake-go-staticcheck--report (checker-output-buf source-buf)
+  "Generate report from CHECKER-OUTPUT-BUF to be reported against SOURCE-BUF.
 Return a list of results."
-  (with-current-buffer staticcheck-stdout-buffer
+  (with-current-buffer checker-output-buf
     (goto-char (point-min))
-    (let ((results '()))
+    (let (results)
       (while (not (eobp))
         (when (looking-at flymake-go-staticcheck--message-regex)
           (let* ((filename (match-string 1))
                  (lineno (string-to-number (match-string 2)))
                  (column (string-to-number (match-string 3)))
                  (msg (match-string 4))
-                 (src-pos (flymake-diag-region source-buffer lineno column)))
-            (if (string= (buffer-file-name source-buffer)
+                 (src-pos (flymake-diag-region source-buf lineno column)))
+            (if (string= (buffer-file-name source-buf)
                          (expand-file-name filename))
-                (push (flymake-make-diagnostic source-buffer
+                (push (flymake-make-diagnostic source-buf
                                                (car src-pos)
-                                               (min (buffer-size source-buffer) (cdr src-pos))
+                                               (min (buffer-size source-buf) (cdr src-pos))
                                                :error
                                                msg)
                       results))))
@@ -85,8 +85,9 @@ Return a list of results."
 
 (defun flymake-go-staticcheck--create-process (source-buffer callback)
   "Internal function.
-Create linter process for SOURCE-BUFFER which invokes CALLBACK once linter is finished.
-CALLBACK is passed one argument, which is a buffer containing stdout from linter."
+Create linter process for SOURCE-BUFFER which invokes CALLBACK
+once linter is finished.  CALLBACK is passed one argument, which
+is a buffer containing stdout from linter."
   (when (process-live-p flymake-go-staticcheck--process)
     (kill-process flymake-go-staticcheck--process))
   (setq flymake-go-staticcheck--process
@@ -132,7 +133,7 @@ Run go-staticcheck on the current buffer, and report results using FLYMAKE-REPOR
   (interactive)
   (flymake-go-staticcheck--ensure-binary-exists)
   (flymake-mode t)
-  (add-hook 'flymake-diagnostic-functions 'flymake-go-staticcheck--checker nil t))
+  (add-hook 'flymake-diagnostic-functions #'flymake-go-staticcheck--checker nil t))
 
 
 (provide 'flymake-go-staticcheck)
