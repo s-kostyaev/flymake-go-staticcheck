@@ -56,8 +56,8 @@ Handle to the linter process for the current buffer.")
   "Internal function.
 Throw an error and tell REPORT-FN to disable itself if `flymake-go-staticcheck-executable' can't be found."
   (unless (executable-find flymake-go-staticcheck-executable)
-    (error (message "can't find '%s' in exec-path - try M-x set-variable flymake-go-staticcheck-executable maybe?"
-                    flymake-go-staticcheck-executable))))
+    (error "Can't find '%s' in exec-path - try M-x customize-variable flymake-go-staticcheck-executable maybe?"
+           flymake-go-staticcheck-executable)))
 
 (defun flymake-go-staticcheck--report (checker-output-buf source-buf)
   "Generate report from CHECKER-OUTPUT-BUF to be reported against SOURCE-BUF.
@@ -122,19 +122,24 @@ Run go-staticcheck against SOURCE-BUFFER and use FLYMAKE-REPORT-FN to report res
               ;; thanks to eglot for workaround.
               :region (with-current-buffer source-buffer (cons (point-min) (point-max)))))))
 
-(defun flymake-go-staticcheck--checker (flymake-report-fn &rest ignored)
-  "Internal function.
-Run go-staticcheck on the current buffer, and report results using FLYMAKE-REPORT-FN.  All other parameters are currently IGNORED."
+;;;###autoload
+(defun flymake-go-staticcheck-checker (flymake-report-fn &rest ignored)
+  "Run go-staticcheck on the current buffer.
+Report results using FLYMAKE-REPORT-FN.  All other parameters are currently IGNORED."
   (flymake-go-staticcheck--check-and-report (current-buffer) flymake-report-fn))
 
 ;;;###autoload
 (defun flymake-go-staticcheck-enable ()
-  "Enable Flymake and add flymake-go-staticcheck as a buffer-local Flymake backend."
+  "Add flymake-go-staticcheck as a buffer-local Flymake backend."
   (interactive)
   (flymake-go-staticcheck--ensure-binary-exists)
-  (flymake-mode t)
-  (add-hook 'flymake-diagnostic-functions #'flymake-go-staticcheck--checker nil t))
+  (add-hook 'flymake-diagnostic-functions #'flymake-go-staticcheck-checker nil t))
 
+;;;###autoload
+(defun flymake-go-staticcheck-disable ()
+  "Remove flymake-go-staticcheck from Flymake backends."
+  (interactive)
+  (remove-hook 'flymake-diagnostic-functions #'flymake-go-staticcheck-checker t))
 
 (provide 'flymake-go-staticcheck)
 ;;; flymake-go-staticcheck.el ends here
