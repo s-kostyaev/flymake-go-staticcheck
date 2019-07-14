@@ -26,7 +26,7 @@ go get -u honnef.co/go/tools/cmd/staticcheck
 
 ### Customization
 
-`M-x` `customize` <kbd>Enter<kbd> `flymake-go-staticcheck` 
+`M-x` `customize` <kbd>Enter</kbd> `flymake-go-staticcheck` 
 
 ## Contributing
 
