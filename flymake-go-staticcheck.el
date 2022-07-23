@@ -41,7 +41,9 @@
 
 (defcustom flymake-go-staticcheck-executable-args nil
   "Extra arguments to pass to staticcheck."
-  :type 'string
+  :type '(choice
+          string
+          (repeat string))
   :group 'flymake-go-staticcheck)
 
 (defvar flymake-go-staticcheck--message-regex "^\\([^:]*\\):\\([0-9]+\\):\\([0-9]*\\):[[:space:]]*\\(.*\\)"
@@ -90,21 +92,25 @@ once linter is finished.  CALLBACK is passed one argument, which
 is a buffer containing stdout from linter."
   (when (process-live-p flymake-go-staticcheck--process)
     (kill-process flymake-go-staticcheck--process))
-  (setq flymake-go-staticcheck--process
-        (make-process
-         :name "flymake-go-staticcheck"
-         :connection-type 'pipe
-         :noquery t
-         :buffer (generate-new-buffer " *flymake-go-staticcheck*")
-         :command (list flymake-go-staticcheck-executable
-                        (or flymake-go-staticcheck-executable-args "")
-                        (buffer-file-name source-buffer))
-         :sentinel (lambda (proc &rest ignored)
-                     (when (and (eq 'exit (process-status proc))
-                                (with-current-buffer source-buffer (eq proc flymake-go-staticcheck--process)))
-                       (let ((proc-buffer (process-buffer proc)))
-                         (funcall callback proc-buffer)
-                         (kill-buffer proc-buffer)))))))
+  (let ((args (pcase flymake-go-staticcheck-executable-args
+                ("" nil)
+                ((and (pred listp) x) x)
+                (x (list x)))))
+    (setq flymake-go-staticcheck--process
+          (make-process
+           :name "flymake-go-staticcheck"
+           :connection-type 'pipe
+           :noquery t
+           :buffer (generate-new-buffer " *flymake-go-staticcheck*")
+           :command `(,flymake-go-staticcheck-executable
+                      ,@args
+                      ,(buffer-file-name source-buffer))
+           :sentinel (lambda (proc &rest ignored)
+                       (when (and (eq 'exit (process-status proc))
+                                  (with-current-buffer source-buffer (eq proc flymake-go-staticcheck--process)))
+                         (let ((proc-buffer (process-buffer proc)))
+                           (funcall callback proc-buffer)
+                           (kill-buffer proc-buffer))))))))
 
 (defun flymake-go-staticcheck--check-and-report (source-buffer flymake-report-fn)
   "Internal function.
