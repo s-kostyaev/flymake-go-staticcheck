@@ -21,7 +21,7 @@
 
 ;;; URL: https://github.com/s-kostyaev/flymake-go-staticcheck
 
-;;; Package-Requires: ((emacs "25"))
+;;; Package-Requires: ((emacs "26.1"))
 
 ;;; Commentary:
 
