@@ -104,7 +104,7 @@ is a buffer containing stdout from linter."
            :buffer (generate-new-buffer " *flymake-go-staticcheck*")
            :command `(,flymake-go-staticcheck-executable
                       ,@args
-                      ,(buffer-file-name source-buffer))
+                      ,(file-name-directory (buffer-file-name source-buffer)))
            :sentinel (lambda (proc &rest ignored)
                        (when (and (eq 'exit (process-status proc))
                                   (with-current-buffer source-buffer (eq proc flymake-go-staticcheck--process)))
